@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod'
 
 export const getNotificationsSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -6,7 +6,7 @@ export const getNotificationsSchema = z.object({
   unreadOnly: z
     .string()
     .optional()
-    .transform((v) => v === "true"),
-});
+    .transform((v) => v === 'true'),
+})
 
-export type GetNotificationsQuery = z.infer<typeof getNotificationsSchema>;
+export type GetNotificationsQuery = z.infer<typeof getNotificationsSchema>

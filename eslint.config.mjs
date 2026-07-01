@@ -43,4 +43,113 @@ export default tseslint.config(
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Architectural boundary enforcement (Hexagonal / Clean Architecture).
+  // See directives/folder_structure_sop.md + eventing_patterns.md.
+  // ───────────────────────────────────────────────────────────────────────────
+
+  // Domain — pure TypeScript. shared-kernel + same-domain relative imports only.
+  {
+    files: ['src/modules/*/domain/**/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '@nestjs/*',
+                'fastify',
+                'prisma',
+                '@prisma/*',
+                '@/generated',
+                '@/generated/**',
+                '@/infrastructure/**',
+                '@/common/**',
+                '@/modules/*/application/**',
+                '@/modules/*/infrastructure/**',
+                '@/modules/*/presentation/**',
+              ],
+              message:
+                'Domain phải pure TypeScript: chỉ shared-kernel + relative cùng domain. Cấm framework (NestJS/Fastify), ORM (Prisma/generated), và mọi tầng ngoài.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  // Application — orchestrates via interfaces. No ORM/HTTP/DB; no HTTP exceptions.
+  {
+    files: ['src/modules/*/application/**/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@nestjs/common',
+              importNames: [
+                'NotFoundException',
+                'BadRequestException',
+                'ForbiddenException',
+                'UnauthorizedException',
+                'ConflictException',
+                'GoneException',
+                'HttpException',
+                'InternalServerErrorException',
+                'UnprocessableEntityException',
+                'NotAcceptableException',
+              ],
+              message:
+                'Application không được throw HTTP exception. Dùng ApplicationError subclass — GlobalExceptionFilter sẽ map statusCode.',
+            },
+          ],
+          patterns: [
+            {
+              group: [
+                'prisma',
+                '@prisma/*',
+                '@/generated',
+                '@/generated/**',
+                'fastify',
+                '@/infrastructure/database/**',
+                '@/infrastructure/http/**',
+              ],
+              message:
+                'Application không được phụ thuộc ORM/HTTP/DB. Dùng repository interface; infra hợp lệ duy nhất là @/infrastructure/kafka và @/infrastructure/cqrs.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  // Presentation — translate HTTP <-> handlers. Never touch the ORM/DB.
+  {
+    files: ['src/modules/*/presentation/**/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                'prisma',
+                '@prisma/*',
+                '@/generated',
+                '@/generated/**',
+                '@/infrastructure/database/**',
+              ],
+              message: 'Presentation không được chạm ORM/DB trực tiếp.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 )

@@ -1,18 +1,18 @@
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from "@/infrastructure/database/prisma/prisma.service";
+import { Injectable } from '@nestjs/common'
+import { PrismaService } from '@/infrastructure/database/prisma/prisma.service'
 import type {
   FindByRecipientOptions,
   INotificationRepository,
   InsertNotificationRow,
   NotificationDto,
-} from "../../application/repositories/notification.repository.interface";
+} from '../../application/repositories/notification.repository.interface'
 
 @Injectable()
 export class PrismaNotificationRepository implements INotificationRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async insertMany(rows: InsertNotificationRow[]): Promise<void> {
-    if (rows.length === 0) return;
+    if (rows.length === 0) return
 
     await this.prisma.client.notification.createMany({
       data: rows.map((r) => ({
@@ -26,7 +26,7 @@ export class PrismaNotificationRepository implements INotificationRepository {
         actorUserId: r.actorUserId,
       })),
       skipDuplicates: true, // idempotent: @@unique([recipientUserId, sourceEventId])
-    });
+    })
   }
 
   async findByRecipient(
@@ -40,10 +40,10 @@ export class PrismaNotificationRepository implements INotificationRepository {
         recipientUserId: userId,
         ...(options.unreadOnly ? { readAt: null } : {}),
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: options.limit,
       skip: options.offset,
-    });
+    })
 
     return rows.map((r) => ({
       id: r.id,
@@ -57,13 +57,10 @@ export class PrismaNotificationRepository implements INotificationRepository {
       actorUserId: r.actorUserId,
       readAt: r.readAt,
       createdAt: r.createdAt,
-    }));
+    }))
   }
 
-  async markRead(
-    id: string,
-    recipientUserId: string,
-  ): Promise<NotificationDto | null> {
+  async markRead(id: string, recipientUserId: string): Promise<NotificationDto | null> {
     try {
       const row = await this.prisma.client.notification.update({
         where: {
@@ -71,7 +68,7 @@ export class PrismaNotificationRepository implements INotificationRepository {
           recipientUserId, // prevents marking another user's notification read
         },
         data: { readAt: new Date() },
-      });
+      })
 
       return {
         id: row.id,
@@ -85,10 +82,10 @@ export class PrismaNotificationRepository implements INotificationRepository {
         actorUserId: row.actorUserId,
         readAt: row.readAt,
         createdAt: row.createdAt,
-      };
+      }
     } catch {
       // P2025 = record not found or where clause unmatched
-      return null;
+      return null
     }
   }
 }

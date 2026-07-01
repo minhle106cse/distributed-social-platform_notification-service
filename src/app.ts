@@ -1,5 +1,5 @@
-import { buildServer } from "./bootstrap/server";
+import { buildServer } from './bootstrap/server'
 
 export async function createApp() {
-  return await buildServer();
+  return await buildServer()
 }

@@ -1,16 +1,16 @@
-import { Module } from "@nestjs/common";
-import { LoggerModule } from "nestjs-pino";
-import { APP_INTERCEPTOR, APP_FILTER, APP_GUARD } from "@nestjs/core";
-import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
-import { createLogger } from "@distributed-social-platform/shared-kernel";
-import { ConfigModule } from "./config/config.module";
-import { PrismaModule } from "./infrastructure/database/prisma/prisma.module";
-import { KafkaModule } from "./infrastructure/kafka/kafka.module";
-import { HealthController } from "./infrastructure/http/controllers/health.controller";
-import { HttpLoggingInterceptor } from "./infrastructure/http/interceptors/http-logging.interceptor";
-import { ResponseInterceptor } from "./infrastructure/http/interceptors/response.interceptor";
-import { GlobalExceptionFilter } from "./infrastructure/http/filter/global-exception.filter";
-import { NotificationModule } from "./modules/notification/notification.module";
+import { Module } from '@nestjs/common'
+import { LoggerModule } from 'nestjs-pino'
+import { APP_INTERCEPTOR, APP_FILTER, APP_GUARD } from '@nestjs/core'
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
+import { createLogger } from '@distributed-social-platform/shared-kernel'
+import { ConfigModule } from './config/config.module'
+import { PrismaModule } from './infrastructure/database/prisma/prisma.module'
+import { KafkaModule } from './infrastructure/kafka/kafka.module'
+import { HealthController } from './infrastructure/http/controllers/health.controller'
+import { HttpLoggingInterceptor } from './infrastructure/http/interceptors/http-logging.interceptor'
+import { ResponseInterceptor } from './infrastructure/http/interceptors/response.interceptor'
+import { GlobalExceptionFilter } from './infrastructure/http/filter/global-exception.filter'
+import { NotificationModule } from './modules/notification/notification.module'
 
 @Module({
   controllers: [HealthController],
@@ -23,15 +23,15 @@ import { NotificationModule } from "./modules/notification/notification.module";
     LoggerModule.forRootAsync({
       useFactory: () => ({
         pinoHttp: {
-          logger: createLogger("notification-service"),
+          logger: createLogger('notification-service'),
           autoLogging: {
-            ignore: (req) => req.url === "/health" || req.url === "/metrics",
+            ignore: (req) => req.url === '/health' || req.url === '/metrics',
           },
           customAttributeKeys: {
-            req: "request",
-            res: "response",
-            err: "error",
-            responseTime: "responseTime",
+            req: 'request',
+            res: 'response',
+            err: 'error',
+            responseTime: 'responseTime',
           },
         },
       }),
