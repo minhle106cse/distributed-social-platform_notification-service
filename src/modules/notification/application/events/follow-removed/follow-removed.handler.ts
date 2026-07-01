@@ -11,6 +11,8 @@ import { SPACE_FOLLOWER_REPOSITORY } from '../../repositories/space-follower.rep
 @Injectable()
 export class FollowRemovedHandler implements IIntegrationEventHandler<FollowRemovedPayload> {
   readonly eventType = EventType.FOLLOW_REMOVED
+  // delete by PK [spaceId, userId] — re-apply matches 0 rows (no-op).
+  readonly idempotency = 'natural-key' as const
 
   constructor(
     @Inject(SPACE_FOLLOWER_REPOSITORY)

@@ -5,6 +5,7 @@ import type { CloudEvent } from '@distributed-social-platform/shared-kernel'
 import { EventRouter, createLogger, LogContext } from '@distributed-social-platform/shared-kernel'
 import { KafkaClientService } from '@/infrastructure/kafka/kafka-client.service'
 import { DeadLetterProducer } from '@/infrastructure/kafka/dead-letter.producer'
+import { handlerRetryCounter } from '@/infrastructure/observability/notification.metrics'
 import { ItemPublishedHandler } from '../../application/events/item-published/item-published.handler'
 import { FollowCreatedHandler } from '../../application/events/follow-created/follow-created.handler'
 import { FollowRemovedHandler } from '../../application/events/follow-removed/follow-removed.handler'
@@ -126,6 +127,7 @@ export class NotificationEventsConsumer implements OnModuleInit, OnModuleDestroy
       } catch (err) {
         lastErr = err
         if (attempt < this.maxRetries) {
+          handlerRetryCounter.inc({ eventType: event.type })
           this.logger.warn(
             {
               context: LogContext.EVENT_ROUTER,

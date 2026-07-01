@@ -5,6 +5,7 @@ import {
   deadLetterTopic,
   LogContext,
 } from '@distributed-social-platform/shared-kernel'
+import { dlqCounter } from '@/infrastructure/observability/notification.metrics'
 import { KafkaClientService } from './kafka-client.service'
 
 export interface DeadLetterInput {
@@ -59,6 +60,8 @@ export class DeadLetterProducer implements OnModuleInit, OnModuleDestroy {
         },
       ],
     })
+
+    dlqCounter.inc({ reason: input.reason })
 
     this.logger.warn(
       { context: LogContext.EVENT_ROUTER, dlqTopic, reason: input.reason, offset: input.offset },

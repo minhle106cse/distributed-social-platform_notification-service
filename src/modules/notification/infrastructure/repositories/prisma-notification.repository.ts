@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '@/infrastructure/database/prisma/prisma.service'
+import { dedupSkippedCounter } from '@/infrastructure/observability/notification.metrics'
 import type {
   FindByRecipientOptions,
   INotificationRepository,
@@ -14,7 +15,7 @@ export class PrismaNotificationRepository implements INotificationRepository {
   async insertMany(rows: InsertNotificationRow[]): Promise<void> {
     if (rows.length === 0) return
 
-    await this.prisma.client.notification.createMany({
+    const { count } = await this.prisma.client.notification.createMany({
       data: rows.map((r) => ({
         orgId: r.orgId,
         recipientUserId: r.recipientUserId,
@@ -27,6 +28,10 @@ export class PrismaNotificationRepository implements INotificationRepository {
       })),
       skipDuplicates: true, // idempotent: @@unique([recipientUserId, sourceEventId])
     })
+
+    // count = rows actually inserted; the rest were deduped redeliveries.
+    const skipped = rows.length - count
+    if (skipped > 0) dedupSkippedCounter.inc(skipped)
   }
 
   async findByRecipient(

@@ -11,6 +11,8 @@ import { SPACE_FOLLOWER_REPOSITORY } from '../../repositories/space-follower.rep
 @Injectable()
 export class FollowCreatedHandler implements IIntegrationEventHandler<FollowCreatedPayload> {
   readonly eventType = EventType.FOLLOW_CREATED
+  // upsert by PK [spaceId, userId] — re-apply is a no-op.
+  readonly idempotency = 'natural-key' as const
 
   constructor(
     @Inject(SPACE_FOLLOWER_REPOSITORY)

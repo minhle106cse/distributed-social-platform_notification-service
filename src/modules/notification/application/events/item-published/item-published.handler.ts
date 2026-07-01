@@ -13,6 +13,8 @@ import { SPACE_FOLLOWER_REPOSITORY } from '../../repositories/space-follower.rep
 @Injectable()
 export class ItemPublishedHandler implements IIntegrationEventHandler<KnowledgePublishedPayload> {
   readonly eventType = EventType.KNOWLEDGE_PUBLISHED
+  // Fan-out INSERTs are deduped by @@unique([recipientUserId, sourceEventId]).
+  readonly idempotency = 'dedup-constraint' as const
 
   constructor(
     @Inject(NOTIFICATION_REPOSITORY)
