@@ -1,0 +1,42 @@
+// notification-service owns notification_db (separate from core_db/auth_db).
+// This service does NOT share DB with core-api — no cross-DB joins.
+// Title snapshot is stored at write time so reads never need to join core_db.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated"
+}
+
+// url injected via prisma.config.ts (Prisma v7 — url not set here)
+datasource db {
+  provider = "postgresql"
+}
+
+model Notification {
+  id              String    @id @default(uuid())
+  orgId           String    @map("org_id")
+  recipientUserId String    @map("recipient_user_id")
+  type            String    // 'ITEM_PUBLISHED' (B1) | 'NEW_IN_SPACE' (B2)
+  sourceEventId   String    @map("source_event_id") // CloudEvent.id — dedup key
+  itemId          String    @map("item_id")
+  spaceId         String    @map("space_id")
+  titleSnapshot   String    @map("title_snapshot") // snapshot from event payload
+  actorUserId     String    @map("actor_user_id") // createdByUserId from event
+  readAt          DateTime? @map("read_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@unique([recipientUserId, sourceEventId])
+  @@index([orgId, recipientUserId, readAt])
+  @@map("notifications")
+}
+
+model SpaceFollower {
+  orgId     String   @map("org_id")
+  spaceId   String   @map("space_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([spaceId, userId])
+  @@index([spaceId])
+  @@map("space_followers")
+}
