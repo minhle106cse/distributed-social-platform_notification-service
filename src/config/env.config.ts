@@ -8,6 +8,9 @@ export const envConfig = registerAs('env', () => ({
   jwtPublicKey: Buffer.from(process.env.JWT_PUBLIC_KEY!, 'base64').toString('utf-8'),
   kafkaBrokers: (process.env.KAFKA_BROKERS ?? 'localhost:9092').split(','),
   kafkaClientId: process.env.KAFKA_CLIENT_ID ?? 'notification-service',
+  // Group handles knowledge-events + engagement-events (one concern: notifications).
   kafkaNotificationConsumerGroup:
-    process.env.KAFKA_NOTIFICATION_CONSUMER_GROUP ?? 'notification-service-knowledge-group',
+    process.env.KAFKA_NOTIFICATION_CONSUMER_GROUP ?? 'notification-service-group',
+  kafkaConsumerMaxRetries: Number(process.env.KAFKA_CONSUMER_MAX_RETRIES ?? 3),
+  kafkaConsumerRetryBackoffMs: Number(process.env.KAFKA_CONSUMER_RETRY_BACKOFF_MS ?? 500),
 }))
