@@ -1,10 +1,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Producer } from 'kafkajs'
-import {
-  createLogger,
-  deadLetterTopic,
-  LogContext,
-} from '@distributed-social-platform/shared-kernel'
+import { deadLetterTopic, LogContext } from '@distributed-social-platform/shared-kernel'
 import { dlqCounter } from '@/infrastructure/observability/notification.metrics'
 import { KafkaClientService } from './kafka-client.service'
 
@@ -26,9 +23,11 @@ export interface DeadLetterInput {
 @Injectable()
 export class DeadLetterProducer implements OnModuleInit, OnModuleDestroy {
   private readonly producer: Producer
-  private readonly logger = createLogger('notification-service')
 
-  constructor(kafkaClient: KafkaClientService) {
+  constructor(
+    kafkaClient: KafkaClientService,
+    @InjectPinoLogger(DeadLetterProducer.name) private readonly logger: PinoLogger,
+  ) {
     this.producer = kafkaClient.client.producer({ idempotent: true })
   }
 

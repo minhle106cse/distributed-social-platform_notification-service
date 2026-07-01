@@ -1,8 +1,9 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Consumer } from 'kafkajs'
 import type { CloudEvent } from '@distributed-social-platform/shared-kernel'
-import { EventRouter, createLogger, LogContext } from '@distributed-social-platform/shared-kernel'
+import { EventRouter, LogContext } from '@distributed-social-platform/shared-kernel'
 import { KafkaClientService } from '@/infrastructure/kafka/kafka-client.service'
 import { DeadLetterProducer } from '@/infrastructure/kafka/dead-letter.producer'
 import { handlerRetryCounter } from '@/infrastructure/observability/notification.metrics'
@@ -16,7 +17,6 @@ const TOPICS = ['knowledge-events', 'engagement-events']
 export class NotificationEventsConsumer implements OnModuleInit, OnModuleDestroy {
   private readonly consumer: Consumer
   private readonly router: EventRouter
-  private readonly logger = createLogger('notification-service')
   private readonly maxRetries: number
   private readonly retryBackoffMs: number
 
@@ -27,6 +27,7 @@ export class NotificationEventsConsumer implements OnModuleInit, OnModuleDestroy
     private readonly itemPublishedHandler: ItemPublishedHandler,
     private readonly followCreatedHandler: FollowCreatedHandler,
     private readonly followRemovedHandler: FollowRemovedHandler,
+    @InjectPinoLogger(NotificationEventsConsumer.name) private readonly logger: PinoLogger,
   ) {
     const groupId =
       this.configService.get<string>('env.kafkaNotificationConsumerGroup') ??
