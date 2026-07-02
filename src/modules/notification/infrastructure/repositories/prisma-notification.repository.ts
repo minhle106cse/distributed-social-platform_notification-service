@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { Prisma } from '@/generated'
 import { PrismaService } from '@/infrastructure/database/prisma/prisma.service'
 import { dedupSkippedCounter } from '@/infrastructure/observability/notification.metrics'
 import type {
@@ -88,9 +89,15 @@ export class PrismaNotificationRepository implements INotificationRepository {
         readAt: row.readAt,
         createdAt: row.createdAt,
       }
-    } catch {
-      // P2025 = record not found or where clause unmatched
-      return null
+    } catch (err) {
+      // P2025 = no row matched the (id, recipientUserId) filter: either the
+      // notification doesn't exist or it isn't the caller's → 404 (same response
+      // for both, so we don't leak which ids exist). ANY OTHER error (DB down,
+      // timeout…) must propagate as a real 500, not be disguised as "not found".
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+        return null
+      }
+      throw err
     }
   }
 }
