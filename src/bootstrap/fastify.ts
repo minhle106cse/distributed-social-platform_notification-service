@@ -2,6 +2,7 @@ import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import helmet from '@fastify/helmet'
 import cors from '@fastify/cors'
 import compress from '@fastify/compress'
+import { setupSwagger } from './swagger'
 
 export async function setupFastify(app: NestFastifyApplication) {
   const fastify = app.getHttpAdapter().getInstance()
@@ -18,4 +19,6 @@ export async function setupFastify(app: NestFastifyApplication) {
   await fastify.register(compress, {
     encodings: ['gzip', 'deflate', 'br'],
   })
+
+  setupSwagger(app)
 }
