@@ -27,7 +27,8 @@ export class NotificationEventsConsumer implements OnModuleInit, OnModuleDestroy
     private readonly itemPublishedHandler: ItemPublishedHandler,
     private readonly followCreatedHandler: FollowCreatedHandler,
     private readonly followRemovedHandler: FollowRemovedHandler,
-    @InjectPinoLogger(NotificationEventsConsumer.name) private readonly logger: PinoLogger,
+    @InjectPinoLogger(NotificationEventsConsumer.name)
+    private readonly logger: PinoLogger,
   ) {
     const groupId =
       this.configService.get<string>('env.kafkaNotificationConsumerGroup') ??
@@ -95,7 +96,12 @@ export class NotificationEventsConsumer implements OnModuleInit, OnModuleDestroy
           await this.routeWithRetry(event)
         } catch (err) {
           this.logger.error(
-            { context: LogContext.EVENT_ROUTER, err, eventId: event.id, eventType: event.type },
+            {
+              context: LogContext.EVENT_ROUTER,
+              err,
+              eventId: event.id,
+              eventType: event.type,
+            },
             'Handler failed after retries — dead-lettering message',
           )
           await this.deadLetter.send({
