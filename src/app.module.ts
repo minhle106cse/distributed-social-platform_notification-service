@@ -5,6 +5,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { createLogger } from '@distributed-social-platform/shared-kernel'
 import { ConfigModule } from './config/config.module'
 import { PrismaModule } from './infrastructure/database/prisma/prisma.module'
+import { CqrsModule } from './infrastructure/cqrs/cqrs.module'
 import { KafkaModule } from './infrastructure/kafka/kafka.module'
 import { HealthController } from './infrastructure/http/controllers/health.controller'
 import { HttpLoggingInterceptor } from './infrastructure/http/interceptors/http-logging.interceptor'
@@ -17,6 +18,7 @@ import { NotificationModule } from './modules/notification/notification.module'
   imports: [
     ConfigModule,
     PrismaModule,
+    CqrsModule,
     KafkaModule,
     NotificationModule,
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),

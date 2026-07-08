@@ -2,15 +2,24 @@ import { Injectable } from '@nestjs/common'
 import { Prisma } from '@/generated'
 import { PrismaService } from '@/infrastructure/database/prisma/prisma.service'
 import { dedupSkippedCounter } from '@/infrastructure/observability/notification.metrics'
+import {
+  Notification,
+  type NotificationProps,
+} from '@/modules/notification/domain/entities/notification.entity'
 import type {
-  FindByRecipientOptions,
   INotificationRepository,
   InsertNotificationRow,
-  NotificationDto,
-} from '../../application/repositories/notification.repository.interface'
+} from '@/modules/notification/domain/repositories/notification.repository'
+import type {
+  FindByRecipientOptions,
+  INotificationQueryRepository,
+} from '@/modules/notification/application/queries/notification.query-repository'
+import type { NotificationDto } from '@/modules/notification/application/queries/notification.dto'
 
 @Injectable()
-export class PrismaNotificationRepository implements INotificationRepository {
+export class PrismaNotificationRepository
+  implements INotificationRepository, INotificationQueryRepository
+{
   constructor(private readonly prisma: PrismaService) {}
 
   async insertMany(rows: InsertNotificationRow[]): Promise<void> {
@@ -66,38 +75,60 @@ export class PrismaNotificationRepository implements INotificationRepository {
     }))
   }
 
-  async markRead(id: string, recipientUserId: string): Promise<NotificationDto | null> {
-    try {
-      const row = await this.prisma.client.notification.update({
-        where: {
-          id,
-          recipientUserId, // prevents marking another user's notification read
-        },
-        data: { readAt: new Date() },
-      })
+  async findById(id: string, recipientUserId: string): Promise<Notification | null> {
+    const row = await this.prisma.client.notification.findFirst({
+      where: { id, recipientUserId }, // scoped to caller — prevents reading another user's notification
+    })
+    if (!row) return null
 
-      return {
-        id: row.id,
-        orgId: row.orgId,
-        recipientUserId: row.recipientUserId,
-        type: row.type,
-        sourceEventId: row.sourceEventId,
-        itemId: row.itemId,
-        spaceId: row.spaceId,
-        titleSnapshot: row.titleSnapshot,
-        actorUserId: row.actorUserId,
-        readAt: row.readAt,
-        createdAt: row.createdAt,
-      }
+    return Notification.rehydrate(this.toProps(row))
+  }
+
+  async save(notification: Notification): Promise<void> {
+    try {
+      await this.prisma.client.notification.update({
+        where: {
+          id: notification.id,
+          recipientUserId: notification.recipientUserId, // defense in depth, matches findById's scope
+        },
+        data: { readAt: notification.readAt },
+      })
     } catch (err) {
-      // P2025 = no row matched the (id, recipientUserId) filter: either the
-      // notification doesn't exist or it isn't the caller's → 404 (same response
-      // for both, so we don't leak which ids exist). ANY OTHER error (DB down,
-      // timeout…) must propagate as a real 500, not be disguised as "not found".
+      // P2025 = no row matched — the (id, recipientUserId) pair changed between
+      // findById and save (concurrent delete/reassignment). Treat as not-found,
+      // same as findById returning null.
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
-        return null
+        return
       }
       throw err
+    }
+  }
+
+  private toProps(row: {
+    id: string
+    orgId: string
+    recipientUserId: string
+    type: string
+    sourceEventId: string
+    itemId: string
+    spaceId: string
+    titleSnapshot: string
+    actorUserId: string
+    readAt: Date | null
+    createdAt: Date
+  }): NotificationProps {
+    return {
+      id: row.id,
+      orgId: row.orgId,
+      recipientUserId: row.recipientUserId,
+      type: row.type,
+      sourceEventId: row.sourceEventId,
+      itemId: row.itemId,
+      spaceId: row.spaceId,
+      titleSnapshot: row.titleSnapshot,
+      actorUserId: row.actorUserId,
+      readAt: row.readAt,
+      createdAt: row.createdAt,
     }
   }
 }

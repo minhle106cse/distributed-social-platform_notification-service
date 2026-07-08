@@ -8,15 +8,16 @@ import {
   Req,
   Headers,
   NotFoundException,
+  HttpCode,
 } from '@nestjs/common'
 import { FastifyRequest } from 'fastify'
 import { ZodValidationPipe } from 'nestjs-zod'
+import { CommandBus, QueryBus } from '@distributed-social-platform/shared-kernel'
 import type { JwtPayload } from '@/infrastructure/http/guards/jwt-auth.guard'
 import { JwtAuthGuard } from '@/infrastructure/http/guards/jwt-auth.guard'
-import type { INotificationRepository } from '../application/repositories/notification.repository.interface'
-import { NOTIFICATION_REPOSITORY } from '../application/repositories/notification.repository.interface'
+import { MarkNotificationReadCommand } from '../application/commands/mark-notification-read/mark-notification-read.command'
+import { GetNotificationsQuery } from '../application/queries/get-notifications/get-notifications.query'
 import { getNotificationsSchema } from './schemas/get-notifications.schema'
-import { Inject } from '@nestjs/common'
 
 type AuthRequest = FastifyRequest & { user: JwtPayload }
 
@@ -24,8 +25,8 @@ type AuthRequest = FastifyRequest & { user: JwtPayload }
 @UseGuards(JwtAuthGuard)
 export class NotificationController {
   constructor(
-    @Inject(NOTIFICATION_REPOSITORY)
-    private readonly notificationRepo: INotificationRepository,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
   ) {}
 
   @Get()
@@ -37,17 +38,14 @@ export class NotificationController {
   ) {
     if (!orgId) throw new NotFoundException('X-Org-Id header required')
 
-    return this.notificationRepo.findByRecipient(orgId, req.user.sub, {
-      limit: query.limit,
-      offset: query.offset,
-      unreadOnly: query.unreadOnly,
-    })
+    return this.queryBus.execute(
+      new GetNotificationsQuery(orgId, req.user.sub, query.limit, query.offset, query.unreadOnly),
+    )
   }
 
   @Patch(':id/read')
-  async markRead(@Req() req: AuthRequest, @Param('id') id: string) {
-    const notification = await this.notificationRepo.markRead(id, req.user.sub)
-    if (!notification) throw new NotFoundException('Notification not found')
-    return notification
+  @HttpCode(204)
+  async markRead(@Req() req: AuthRequest, @Param('id') id: string): Promise<void> {
+    await this.commandBus.execute(new MarkNotificationReadCommand(id, req.user.sub))
   }
 }

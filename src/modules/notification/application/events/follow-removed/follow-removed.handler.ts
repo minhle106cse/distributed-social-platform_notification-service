@@ -5,8 +5,8 @@ import {
   type IIntegrationEventHandler,
   type FollowRemovedPayload,
 } from '@distributed-social-platform/shared-kernel'
-import type { ISpaceFollowerRepository } from '../../repositories/space-follower.repository.interface'
-import { SPACE_FOLLOWER_REPOSITORY } from '../../repositories/space-follower.repository.interface'
+import type { ISpaceFollowerRepository } from '@/modules/notification/domain/repositories/space-follower.repository'
+import { SPACE_FOLLOWER_REPOSITORY } from '@/modules/notification/domain/repositories/space-follower.repository'
 
 @Injectable()
 export class FollowRemovedHandler implements IIntegrationEventHandler<FollowRemovedPayload> {

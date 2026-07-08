@@ -3,7 +3,7 @@ import { PrismaService } from '@/infrastructure/database/prisma/prisma.service'
 import type {
   ISpaceFollowerRepository,
   UpsertSpaceFollowerRow,
-} from '../../application/repositories/space-follower.repository.interface'
+} from '../../domain/repositories/space-follower.repository'
 
 @Injectable()
 export class PrismaSpaceFollowerRepository implements ISpaceFollowerRepository {

@@ -5,10 +5,10 @@ import {
   type IIntegrationEventHandler,
   type KnowledgePublishedPayload,
 } from '@distributed-social-platform/shared-kernel'
-import type { INotificationRepository } from '../../repositories/notification.repository.interface'
-import { NOTIFICATION_REPOSITORY } from '../../repositories/notification.repository.interface'
-import type { ISpaceFollowerRepository } from '../../repositories/space-follower.repository.interface'
-import { SPACE_FOLLOWER_REPOSITORY } from '../../repositories/space-follower.repository.interface'
+import type { INotificationRepository } from '@/modules/notification/domain/repositories/notification.repository'
+import { NOTIFICATION_REPOSITORY } from '@/modules/notification/domain/repositories/notification.repository'
+import type { ISpaceFollowerRepository } from '@/modules/notification/domain/repositories/space-follower.repository'
+import { SPACE_FOLLOWER_REPOSITORY } from '@/modules/notification/domain/repositories/space-follower.repository'
 
 @Injectable()
 export class ItemPublishedHandler implements IIntegrationEventHandler<KnowledgePublishedPayload> {
@@ -24,7 +24,8 @@ export class ItemPublishedHandler implements IIntegrationEventHandler<KnowledgeP
   ) {}
 
   async handle(event: CloudEvent<KnowledgePublishedPayload>): Promise<void> {
-    const { itemId, orgId, spaceId, title, createdByUserId } = event.data
+    const { itemId, spaceId, title, createdByUserId } = event.data
+    const orgId = event.orgid
 
     const followerIds = await this.spaceFollowerRepo.findFollowerIds(orgId, spaceId)
     const recipients = followerIds.filter((id) => id !== createdByUserId)
