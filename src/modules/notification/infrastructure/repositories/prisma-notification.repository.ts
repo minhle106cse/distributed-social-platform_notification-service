@@ -2,10 +2,8 @@ import { Injectable } from '@nestjs/common'
 import { Prisma } from '@/generated'
 import { PrismaService } from '@/infrastructure/database/prisma/prisma.service'
 import { dedupSkippedCounter } from '@/infrastructure/observability/notification.metrics'
-import {
-  Notification,
-  type NotificationProps,
-} from '@/modules/notification/domain/entities/notification.entity'
+import type { Notification } from '@/modules/notification/domain/entities/notification.entity'
+import { NotificationMapper } from '@/modules/notification/infrastructure/mappers/notification.mapper'
 import type {
   INotificationRepository,
   InsertNotificationRow,
@@ -81,7 +79,7 @@ export class PrismaNotificationRepository
     })
     if (!row) return null
 
-    return Notification.rehydrate(this.toProps(row))
+    return NotificationMapper.toDomain(row)
   }
 
   async save(notification: Notification): Promise<void> {
@@ -101,34 +99,6 @@ export class PrismaNotificationRepository
         return
       }
       throw err
-    }
-  }
-
-  private toProps(row: {
-    id: string
-    orgId: string
-    recipientUserId: string
-    type: string
-    sourceEventId: string
-    itemId: string
-    spaceId: string
-    titleSnapshot: string
-    actorUserId: string
-    readAt: Date | null
-    createdAt: Date
-  }): NotificationProps {
-    return {
-      id: row.id,
-      orgId: row.orgId,
-      recipientUserId: row.recipientUserId,
-      type: row.type,
-      sourceEventId: row.sourceEventId,
-      itemId: row.itemId,
-      spaceId: row.spaceId,
-      titleSnapshot: row.titleSnapshot,
-      actorUserId: row.actorUserId,
-      readAt: row.readAt,
-      createdAt: row.createdAt,
     }
   }
 }

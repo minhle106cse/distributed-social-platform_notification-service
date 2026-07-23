@@ -11,6 +11,12 @@ export const envValidationSchema = z.object({
   KAFKA_NOTIFICATION_CONSUMER_GROUP: z.string().default('notification-service-group'),
   KAFKA_CONSUMER_MAX_RETRIES: z.coerce.number().int().min(0).default(3),
   KAFKA_CONSUMER_RETRY_BACKOFF_MS: z.coerce.number().int().min(0).default(500),
+  // gRPC client target for core-api's internal MembershipVerification service
+  // — notification-service has no Membership table of its own, so X-Org-Id
+  // must be verified against core-api before being trusted (IDOR-class fix,
+  // same pattern as search-service — resilience_patterns.md).
+  CORE_GRPC_URL: z.string().default('localhost:50052'),
+  INTERNAL_GRPC_SHARED_SECRET: z.string().min(16),
 })
 
 export function validate(config: Record<string, unknown>) {

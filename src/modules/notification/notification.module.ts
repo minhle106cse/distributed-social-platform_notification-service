@@ -11,6 +11,9 @@ import { NotificationController } from './presentation/notification.controller'
 import { NOTIFICATION_REPOSITORY } from './domain/repositories/notification.repository'
 import { NOTIFICATION_QUERY_REPOSITORY } from './application/queries/notification.query-repository'
 import { SPACE_FOLLOWER_REPOSITORY } from './domain/repositories/space-follower.repository'
+import { RemoteOrgMembershipGuard } from '@/infrastructure/http/guards/remote-org-membership.guard'
+import { MembershipVerificationClient } from '@/infrastructure/grpc/membership-verification.client'
+import { MembershipVerificationGrpcCaller } from '@/infrastructure/grpc/membership-verification-grpc.caller'
 
 @Module({
   controllers: [NotificationController],
@@ -18,6 +21,10 @@ import { SPACE_FOLLOWER_REPOSITORY } from './domain/repositories/space-follower.
     // Command/query handlers (auto-discovered + registered by CqrsModule)
     MarkNotificationReadHandler,
     GetNotificationsHandler,
+    // X-Org-Id verification (IDOR-class fix — see remote-org-membership.guard.ts)
+    RemoteOrgMembershipGuard,
+    MembershipVerificationGrpcCaller,
+    MembershipVerificationClient,
     // Event handlers
     ItemPublishedHandler,
     FollowCreatedHandler,

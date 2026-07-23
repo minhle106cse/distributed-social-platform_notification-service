@@ -2,7 +2,10 @@ import { ICommand, CommandOptions } from '@distributed-social-platform/shared-ke
 
 export class MarkNotificationReadCommand implements ICommand {
   readonly name = MarkNotificationReadCommand.name
-  readonly options: CommandOptions = { transactional: false, retryable: false }
+  readonly options: CommandOptions = {
+    transactional: false,
+    // set-semantics: markAsRead() is a no-op if already read (does not re-bump readAt).
+  }
 
   constructor(
     readonly notificationId: string,

@@ -20,5 +20,7 @@ export const envConfig = registerAs('env', () => {
     kafkaNotificationConsumerGroup: env.KAFKA_NOTIFICATION_CONSUMER_GROUP,
     kafkaConsumerMaxRetries: env.KAFKA_CONSUMER_MAX_RETRIES,
     kafkaConsumerRetryBackoffMs: env.KAFKA_CONSUMER_RETRY_BACKOFF_MS,
+    coreGrpcUrl: env.CORE_GRPC_URL,
+    internalGrpcSharedSecret: env.INTERNAL_GRPC_SHARED_SECRET,
   }
 })
