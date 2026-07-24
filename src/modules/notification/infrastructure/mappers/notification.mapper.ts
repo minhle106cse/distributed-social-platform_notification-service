@@ -30,4 +30,25 @@ export class NotificationMapper {
       createdAt: row.createdAt,
     })
   }
+
+  // Full persistence shape, for consistency with every other mapper in the codebase.
+  // `save()`'s repository update narrows this to just `readAt` (the only mutable
+  // field — markAsRead() is the entity's one transition) instead of writing every
+  // column back; that's the same "scoped transition payload" pattern already used
+  // by KnowledgeItem's publish/verify/softDelete updates, not a mapper bypass.
+  static toPersistence(notification: Notification): PrismaNotificationRow {
+    return {
+      id: notification.id,
+      orgId: notification.orgId,
+      recipientUserId: notification.recipientUserId,
+      type: notification.type,
+      sourceEventId: notification.sourceEventId,
+      itemId: notification.itemId,
+      spaceId: notification.spaceId,
+      titleSnapshot: notification.titleSnapshot,
+      actorUserId: notification.actorUserId,
+      readAt: notification.readAt,
+      createdAt: notification.createdAt,
+    }
+  }
 }

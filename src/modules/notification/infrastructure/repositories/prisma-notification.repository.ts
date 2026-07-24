@@ -84,12 +84,13 @@ export class PrismaNotificationRepository
 
   async save(notification: Notification): Promise<void> {
     try {
+      const { readAt } = NotificationMapper.toPersistence(notification)
       await this.prisma.client.notification.update({
         where: {
           id: notification.id,
           recipientUserId: notification.recipientUserId, // defense in depth, matches findById's scope
         },
-        data: { readAt: notification.readAt },
+        data: { readAt },
       })
     } catch (err) {
       // P2025 = no row matched — the (id, recipientUserId) pair changed between
